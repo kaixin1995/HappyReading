@@ -1,0 +1,52 @@
+﻿<Window x:Class="HappyReading.UI.ReadingPage"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:Controls="http://metro.mahapps.com/winfx/xaml/controls"
+        mc:Ignorable="d"
+        Title="ReadingPage" Height="650" Width="470" WindowStyle="None"  WindowStartupLocation="CenterScreen" Background="Transparent" AllowsTransparency="True" Topmost="True" PreviewKeyDown="Direction_PreviewKeyDown" Loaded="Window_Loaded" ResizeMode="CanResizeWithGrip">
+    <Grid>
+        <Border Name="Frame" CornerRadius="15,15,15,15"  Margin="2,2,2,2" BorderThickness="1" BorderBrush="White" Opacity="1" >
+            <Border Name="theme" Opacity="0.1" Margin="0" Background="#C4ECCB"  BorderThickness="1" BorderBrush="#D3EDFF" CornerRadius="15,15,15,15" />
+        </Border>
+        <Grid Grid.Row=" 0" x:Name="TitleBar"  MouseMove="Window_MouseMove">
+            <TextBlock Text="正文" Name="newTitle" FontSize="21" Margin="10,14,10,607" MouseDown="NewTitle_MouseDown" />
+            <Image Width="32" Height="32" Name="img" MouseDown="Img_MouseDown" MouseEnter="Img_MouseEnter" MouseLeave="Img_MouseLeave"  Margin="424,6,10,607" RenderTransformOrigin="2.158,0.612"></Image>
+        </Grid>
+        <Controls:ProgressRing Foreground="{DynamicResource AccentColorBrush}" Name="buffer" />
+        <RichTextBox IsReadOnly="True"  BorderBrush="{x:Null}" BorderThickness="0" MouseDoubleClick="NewText_MouseDoubleClick" Margin="10,45,10,10" Name="newText" Background="Transparent" FontSize="21">
+            <RichTextBox.ContextMenu>
+                <ContextMenu StaysOpen="true">
+                    <MenuItem Header="查看目录" Name="ViewDirectory" Click="ViewDirectory_Click" />
+                    <MenuItem Header="上一章" Name="UpperChapter" Click="UpperChapter_Click" />
+                    <MenuItem Header="下一章" Name="NextChapter" Click="NextChapter_Click"/>
+                    <MenuItem Header="切换主题">
+                        <MenuItem Header="默认模式" Name="Default" Click="ThemePreservation"/>
+                        <MenuItem Header="护眼模式" Name="Eyehelp" Click="ThemePreservation"/>
+                        <MenuItem Header="黑夜模式" Name="Night" Click="ThemePreservation"/>
+                        <MenuItem Header="透明模式" Name="transparent" Click="ThemePreservation"/>
+                    </MenuItem>
+                    <MenuItem Header="朗读听书" Click="ReadingAloud_Click" />
+                    <MenuItem Header="下载本书(测试)" Name="Download" Click="Download_Click" />
+                    <MenuItem Header="返回主页" Click="Homepage_Click" />
+                </ContextMenu>
+            </RichTextBox.ContextMenu>
+        </RichTextBox>
+        <!--目录-->
+        <ListView Margin="10,48,10,12"  Name="NewListView" Visibility="Collapsed" FontSize="14" MouseDoubleClick="NewListView_MouseDoubleClick">
+            <ListView.View>
+                <GridView>
+                    <GridViewColumn Header="ID" Width="40" DisplayMemberBinding="{Binding Key}" />
+                    <GridViewColumn Header="目录名" Width="391" DisplayMemberBinding="{Binding Value}"/>
+                </GridView>
+            </ListView.View>
+            <ListView.ContextMenu>
+                <ContextMenu StaysOpen="true">
+                    <MenuItem Header="退出目录" Name="ExitDirectory" Click="ExitDirectory_Click" />
+                </ContextMenu>
+            </ListView.ContextMenu>
+        </ListView>
+
+    </Grid>
+</Window>

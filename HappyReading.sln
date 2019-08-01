@@ -1,0 +1,25 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio 15
+VisualStudioVersion = 15.0.28307.572
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "HappyReading", "HappyReading\HappyReading.csproj", "{A7AAEB8A-9CDA-485D-88A5-15208889EDDA}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{A7AAEB8A-9CDA-485D-88A5-15208889EDDA}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{A7AAEB8A-9CDA-485D-88A5-15208889EDDA}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{A7AAEB8A-9CDA-485D-88A5-15208889EDDA}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{A7AAEB8A-9CDA-485D-88A5-15208889EDDA}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {D93B108A-14B4-439B-9FF3-83E11E3D2ED4}
+	EndGlobalSection
+EndGlobal
