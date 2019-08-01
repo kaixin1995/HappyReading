@@ -1,4 +1,4 @@
-## 开心阅读WPF版1.0：
+## 开心阅读WPF版4.2：
 去年的时候写了开心阅读Winform版，当时只是为了练手写的，没想到喜欢的人不少，所以就萌生了写一版更加完善的版本，第一版其实功能已经挺完善，但是却有一些缺陷，例如书源是写死在代码中的，一旦书源站出现无法打开，或者说信息发生改变，这种情况下，要么删除源，要么修改源，但是因为书源并非外置，用户压根就无法修改这些，再加上因为Winform写UI界面确实难搞，所以界面写的也有点不尽人意。  后来一直想要重写一个版本，这个月刚好时间比较充足，便重写了这个版本。
 
 ## 本版本的亮点：
@@ -77,11 +77,8 @@
 ----
 
 ## 本软件使用.net4.5进行开发，界面使用WPF，界面UI模块使用的是开源UI组件[mahapps](https://mahapps.com/)  
-<<<<<<< HEAD
-## 已编译安装包:[百度云](https://pan.baidu.com/s/1d5ehJGD6bJvYSYAHOyGX3A) 提取码:d4qt   | [蓝奏云](https://www.lanzous.com/i549o6d) 
-=======
-## 已编译安装包:[百度云](https://pan.baidu.com/s/1d5ehJGD6bJvYSYAHOyGX3A) 提取码:d4qt   | [蓝奏云](https://www.lanzous.com/i4lqxmb) 
->>>>>>> 4a176b242ea54367c2b8cfb562445728b5b04e70
+
+## 已编译安装包:[百度云](https://pan.baidu.com/s/1d5ehJGD6bJvYSYAHOyGX3A) 提取码:d4qt   | [蓝奏云](https://www.lanzous.com/i592pde) 
 
 
 ## 免责声明
