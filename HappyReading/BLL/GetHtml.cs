@@ -27,8 +27,8 @@ namespace HappyReading.BLL
                 myReq.KeepAlive = true;
                 myReq.Headers.Add("Accept-Language", "zh-cn,en-us;q=0.5");
 
-                //设置超时时间为20秒
-                //myReq.Timeout = 5000;
+                //设置超时时间为10秒
+                myReq.Timeout = 10000;
                 HttpWebResponse result = (HttpWebResponse)myReq.GetResponse();
                
                 Stream receviceStream = result.GetResponseStream();
@@ -39,8 +39,9 @@ namespace HappyReading.BLL
                 result.Close();
                 return strHTML;
             }
-            catch 
+            catch(Exception ex)
             {
+                Tool.TextAdditional(ex.Message);
                 return null;
             }
         }
@@ -54,34 +55,47 @@ namespace HappyReading.BLL
         /// <returns></returns>
         public static string GetHttpWebRequest(string url)
         {
-            //网站编码
-            string code = string.Empty;
-            BookSource bookSource = DataFetch.URLGetBookSource(url);
-
-            //防止为NULL
-            //if (bookSource == null) return "";
-
-            if (bookSource.Code == null|| bookSource.Code.Trim().Length<=0)
+            try
             {
-                code = GetCode(url);
-                bookSource.Code = code;
-                SQLiteDBHelper.ExecuteDataTable("update BookSource set Code='"+ code + "' where Url='"+ bookSource .Url+ "'; ", null);
-                TempData.UpdateBookSourceS();
-
+                //网站编码
+                string code = TempData.GetUrlCode(url);
+                return GetHttp(url, code);
             }
-            else
+            catch(Exception ex)
             {
-                code = bookSource.Code;
+                Tool.TextAdditional(ex.Message);
+                return GetHttp(url, GetCode(url));
             }
-
-            return GetHttp(url, code);
         }
 
-        public void DoSomething()
+
+        /// <summary>
+        /// 获取网页内容
+        /// </summary>
+        /// <param name="url">需要查询的链接</param>
+        /// <returns></returns>
+        public static string GetHttpWebRequest(string url,string keyword)
         {
-            // 休眠 5秒 
-            Thread.Sleep(new TimeSpan(0, 0, 0, 5));
+            try
+            {
+                //把网址分割，取出域名部分
+                string[] Urls = url.Split(new string[] { "://", "/" }, StringSplitOptions.RemoveEmptyEntries);
+                if (!TempData.UrlCode.ContainsKey(Urls[1]))
+                {
+                    TempData.UrlCode[Urls[1]] = GetCode(url);
+                }
+
+                //网站编码
+                string code = TempData.UrlCode[Urls[1]];
+                return GetHttp(url, code);
+            }
+            catch
+            {
+                Tool.TextAdditional("获取网页内容失败");
+                return GetHttp(url, GetCode(url));
+            }
         }
+
 
         /// <summary>
         /// 智能判断网站编码
@@ -115,6 +129,11 @@ namespace HappyReading.BLL
                 return "GB2312";
             }
 
+            //如果获取不到编码，那就默认为utf-8
+            if (Code.Length <= 0)
+            {
+                return "utf-8";
+            }
             return Code;
 
         }
@@ -143,6 +162,7 @@ namespace HappyReading.BLL
             catch (WebException ex)
             {
                 Console.WriteLine(ex.ToString());
+                Tool.TextAdditional(ex.Message);
                 return false;
             }
             return false;

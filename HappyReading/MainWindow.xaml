@@ -39,7 +39,7 @@
                         <!--菜单-->
                         <ContextMenu  StaysOpen="true" Name="BookshelfMenu">
                             <MenuItem Header="立即阅读" Click="Read_Click" Tag="{Binding Path=Id}" />
-                            <MenuItem Header="一键更新" Click="Updata_Click" Tag="{Binding Path=Id}" />
+                            <MenuItem Header="一键更新" Click="Updata_Click" />
                             <MenuItem Header="更换书源" Click="Replace_Click" Tag="{Binding Path=Id}" />
                             <MenuItem Header="查看书籍" Click="CheckBooks_Click" Tag="{Binding Path=Id}" />
                             <MenuItem Header="删除书籍" Click="Delete_Click" Tag="{Binding Path=Id}" />
@@ -111,6 +111,7 @@
                         <ListView.ContextMenu>
                             <ContextMenu StaysOpen="true">
                                 <MenuItem Header="移出养肥区" Name="MoveOut" Click="MoveOut_Click" />
+                                <MenuItem Header="一键更新" Click="Updata_Click" />
                             </ContextMenu>
                         </ListView.ContextMenu>
                     </ListView>
@@ -190,7 +191,7 @@
                     <Button Content="书源管理" Name="SourceManagement" Click="SourceManagement_Click" Margin="366,522,14,21" RenderTransformOrigin="1.353,0.467" />
                     <Label Content="养肥数:" IsEnabled="False"  Margin="195,522,192,21" FontSize="18" />
                     <ComboBox Name="fatten" FontSize="18" SelectionChanged="SaveConfiguration" Margin="271,522,114,21"/>
-                    <Controls:ToggleSwitch OnLabel="显示养肥区" FontSize="18" Click="BoolFertilizingArea_Click"  Name="BoolFertilizingArea" OffLabel="隐藏养肥区" Margin="21,520,268,14" />
+                    <Controls:ToggleSwitch OnLabel="显示养肥区" FontSize="18" Click="BoolFertilizingArea_Click"  Name="BoolFertilizingArea" OffLabel="隐藏养肥区" Margin="21,520,268,14" IsChecked="True" />
                     <Label Content="按键(Alt+Q)听书开始/停止     按键(Alt+W)听书暂停/播放" Margin="15,202,10,339" FontSize="16" />
                 </Grid>
             </TabItem>

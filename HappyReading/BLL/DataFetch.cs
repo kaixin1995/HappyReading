@@ -5,6 +5,8 @@ using System;
 using System.Collections.Generic;
 using System.Data;
 using System.Linq;
+using System.Text;
+using System.Threading;
 using System.Windows;
 
 namespace HappyReading.BLL
@@ -41,9 +43,9 @@ namespace HappyReading.BLL
                     System.Diagnostics.Process.Start(update.Download);
                 }
             }
-            catch
+            catch (Exception ex)
             {
-
+                Tool.TextAdditional(ex.Message);
             }
         }
 
@@ -127,7 +129,7 @@ namespace HappyReading.BLL
                 //检测书源有效性
                 if (bs.Title is null)
                 {
-                    Tips tips = new Tips(book.Name + "的书源不存在，请检查书源是否已经被删除掉？");
+                    Tips tips = new Tips(book.Name + "的书源发现异常，请检查书源是否被删除或禁用！");
                     tips.Show();
                     return;
                 }
@@ -144,18 +146,49 @@ namespace HappyReading.BLL
                 ((MainWindow)ob).DataContext = DataFetch.GetBooks();
             }));
         }
-        
 
         /// <summary>
         /// 获取全部书源
         /// </summary>
-        /// <returns>返回全部书源</returns>
-        public static List<BookSource> GetBookSources()
+        /// <param name="State">状态1代表只获取正常的书源，如果为其他则获取全部书源</param>
+        /// <returns></returns>
+        public static List<BookSource> GetBookSources(int State=1)
         {
             //获取DataTable
-            DataTable dt = SQLiteDBHelper.ExecuteDataTable("select *from BookSource where State=1", null);
+            DataTable dt;
+            if (State == 1)
+            {
+                //获取DataTable
+                dt = SQLiteDBHelper.ExecuteDataTable("select *from BookSource where State=1", null);
+            }
+            else
+            {
+                //获取DataTable
+                dt = SQLiteDBHelper.ExecuteDataTable("select *from BookSource", null);
+            }
+            
             //获取所有书源
             return ModelConvertHelper<BookSource>.DataTableToList(dt);
+        }
+
+        /// <summary>
+        /// 更新书源状态
+        /// </summary>
+        public static void UpdateSourceState()
+        {
+            Thread thread = new Thread(new ThreadStart(delegate
+            {
+                //遍历源站
+                foreach (BookSource bookSource in GetBookSources(0))
+                {
+                    //1代表网站可以访问，0代表不可以访问
+                    int state = GetHtml.GetUnicom(bookSource.Url) ? 1 : 0;
+                    UpdateState((int)bookSource.Id, state);
+                }
+                TempData.UpdateBookSourceS();
+            }));
+            thread.IsBackground = true;
+            thread.Start();
         }
 
         /// <summary>
@@ -166,6 +199,7 @@ namespace HappyReading.BLL
         /// <returns>返回搜索结果</returns>
         public static List<Book> Search(BookSource bookSource,string Keyword)
         {
+            /*
             //这里先判断是否是全部书源搜索
             if (bookSource.Id == -5)
             {
@@ -176,9 +210,10 @@ namespace HappyReading.BLL
                     {
                         if (Books.Count <= 0)
                         {
-                            if (Search(Source, Keyword) != null)
+                            List<Book> T_books = Search(Source, Keyword);
+                            if (T_books != null)
                             {
-                                Books = Search(Source, Keyword);
+                                Books = T_books;
                             }
                         }
                         else
@@ -186,14 +221,28 @@ namespace HappyReading.BLL
                             Books = Books.Concat(Search(Source, Keyword)).ToList<Book>();
                         }
                     }
-                    catch(Exception ex)
+                    catch (Exception ex)
                     {
                         MessageBox.Show(ex.Message);
+                        Tool.TextAdditional(ex.Message);
                     }
                 }
                 return Books;
-            }
+            }*/
 
+            //获取编码
+            string Code = GetHtml.GetCode(bookSource.SearchUrl);
+
+            //忽略大小写进行比较
+            if (!Code.Equals("utf-8", StringComparison.OrdinalIgnoreCase))
+            {
+                if (Code.Trim().Length <= 0)
+                {
+                    Code = "utf-8";
+                }
+                //这里处理一下keyword
+                Keyword = Tool.EncodingConvert(Keyword, Encoding.GetEncoding(Code));
+            }
             //存放书籍的书架
             List<Book> books = new List<Book>();
 
@@ -209,8 +258,8 @@ namespace HappyReading.BLL
             //遍历搜索到的书籍
             for (int i = 0; i < bookList.Length; i++)
             {
-                //获取到书籍地址
-                string BookUrl = Tool.GetRegexStr(bookList[i], bookSource.AddressRegular);
+                //获取到书籍地址(对链接做出处理)
+                string BookUrl = Tool.ObtainUrl(bookSource.Url, Tool.GetRegexStr(bookList[i], bookSource.AddressRegular));
 
                 //防止因为找不到书籍而导致的错误
                 if (BookUrl.Length <= 3)
@@ -223,6 +272,11 @@ namespace HappyReading.BLL
                 //获取书籍名称
                 string BookName = Tool.GetRegexStr(BookHtml, bookSource.BookNameRegular);
 
+                //书名都不存在，自然需要跳过本次循环
+                if (BookName.Length <= 0)
+                {
+                    continue;
+                }
 
                 //获取作者
                 string BookAuthor = Tool.GetRegexStr(BookHtml, bookSource.AuthorRegular);
@@ -255,8 +309,10 @@ namespace HappyReading.BLL
             return books;
     }
 
+
+        /*
         /// <summary>
-        /// 所有源站遍历搜索
+        /// 所有源站遍历搜索某书
         /// </summary>
         /// <param name="Works">书籍信息</param>
         /// <returns>返回所有源搜索结果</returns>
@@ -269,17 +325,21 @@ namespace HappyReading.BLL
             foreach (BookSource bookSource in bookSources)
             {
                 List<Book> books = Search(bookSource, BookName);
-                foreach (Book book in books)
+                if (books != null)
                 {
-                    if (book.Name == BookName|| book.Author== Works.Author&& book.Name.Contains(BookName))
+                    foreach (Book book in books)
                     {
-                        book.Id = Works.Id;
-                        Books.Add(book);
+                        if (book.Name == BookName || book.Author == Works.Author && book.Name.Contains(BookName))
+                        {
+                            book.Id = Works.Id;
+                            Books.Add(book);
+                        }
                     }
                 }
+                
             }
             return Books;
-        }
+        }*/
 
 
         /// <summary>
@@ -399,7 +459,7 @@ namespace HappyReading.BLL
         public static BookSource GetBookSource(string SourceName)
         {
             //获取DataTable
-            DataTable dt = SQLiteDBHelper.ExecuteDataTable("select *from BookSource where Title='" + SourceName+"'", null);
+            DataTable dt = SQLiteDBHelper.ExecuteDataTable("select *from BookSource where Title='" + SourceName+ "' and State!=0", null);
 
             //获取指定ID书籍的对象
             BookSource source = DAL.ModelConvertHelper<BookSource>.DataTableToModel(dt);
@@ -464,6 +524,16 @@ namespace HappyReading.BLL
         /// <returns>返回结果</returns>
         public static bool SourceAdd(BookSource bookSource)
         {
+            //增加之前先判断是否已经存在该书源
+
+            int count= Convert.ToInt32(SQLiteDBHelper.ExecuteScalar("select count(*) as count from BookSource where Url='" + bookSource.Url + "' or Title='" + bookSource.Title + "'", "count"));
+
+            if (count > 0)
+            {
+                return false;
+            }
+            
+            
             string sql= "INSERT INTO BookSource('Title','Url','SearchUrl','AddressRangeRegular','AddressCuttingRegular','AddressRegular','BookNameRegular','AuthorRegular','UpdateRegular','NewestRegular','DetailsRegular','StateRegular','DirectoryScopeRegular','DirectoryCuttingRegular','DirectoryTieleRegular','DirectoryUrlRegular','ContentTitleRegular','ContentRegular','ImageRegular','State') VALUES('" + bookSource.Title+"', '"+bookSource.Url+"', '"+bookSource.SearchUrl+"', '"+bookSource.AddressRangeRegular+"', '"+bookSource.AddressCuttingRegular+"', '"+bookSource.AddressRegular+ "','" + bookSource.BookNameRegular + "', '" + bookSource.AuthorRegular+"', '"+bookSource.UpdateRegular+"', '"+bookSource.NewestRegular+"', '"+bookSource.DetailsRegular+"', '"+bookSource.StateRegular+"', '"+bookSource.DirectoryScopeRegular+"', '"+bookSource.DirectoryCuttingRegular+"', '"+bookSource.DirectoryTieleRegular+"', '"+bookSource.DirectoryUrlRegular+"', '"+bookSource.ContentTitleRegular+"', '"+bookSource.ContentRegular+"', '"+bookSource.ImageRegular+"'," +bookSource.State+")";
 
             TempData.UpdateBookSourceS();

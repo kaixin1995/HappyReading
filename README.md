@@ -13,6 +13,14 @@
 + 更多……
 ----
 
+
+## 2019年08月21日更新内容：
+1.增加顶点小说书源，默认书源数量为5个  
+2.修复详情页和书源增加页的BUG  
+3.优化搜索代码，大幅度提升搜索速度  
+4.增加书源自动检测，如果书源失效，自动禁用该书源  
+5.增加错误日志记录，更快的定位问题所在  
+
 ## 2019年07月30日更新内容：
 1.增加E小说及笔趣阁C小说源站 
 2.优化阅读页配置项不立即生效的BUG  
@@ -78,7 +86,7 @@
 
 ## 本软件使用.net4.5进行开发，界面使用WPF，界面UI模块使用的是开源UI组件[mahapps](https://mahapps.com/)  
 
-## 已编译安装包:[百度云](https://pan.baidu.com/s/1d5ehJGD6bJvYSYAHOyGX3A) 提取码:d4qt   | [蓝奏云](https://www.lanzous.com/i592pde) 
+## 已编译安装包:[百度云](https://pan.baidu.com/s/1d5ehJGD6bJvYSYAHOyGX3A) 提取码:d4qt   | [蓝奏云](https://www.lanzous.com/i5p0b9a) 
 
 
 ## 免责声明

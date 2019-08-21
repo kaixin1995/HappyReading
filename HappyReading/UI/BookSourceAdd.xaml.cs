@@ -23,7 +23,7 @@ namespace HappyReading.UI
         {
             InitializeComponent();
             //加载书源
-            ListSource.ItemsSource = DataFetch.GetBookSources();
+            ListSource.ItemsSource = DataFetch.GetBookSources(0);
         }
 
 
@@ -31,7 +31,7 @@ namespace HappyReading.UI
         {
             InitializeComponent();
             //加载书源
-            ListSource.ItemsSource = DataFetch.GetBookSources();
+            ListSource.ItemsSource = DataFetch.GetBookSources(0);
 
             this.Closed += BeforeClosing;
             this.mainWindow = mainWindow;
@@ -74,7 +74,7 @@ namespace HappyReading.UI
         {
             SearchBook searchBook = new SearchBook();
             //搜索链接拼凑
-            searchBook.BookUrl= SearchUrl.Text + SearchBookName.Text;
+            searchBook.BookUrl= SearchUrl.Text + Tool.EncodingConvert(SearchBookName.Text, Encoding.GetEncoding(GetHtml.GetCode(SearchUrl.Text)));
             searchBook.AddressRangeRegular = AddressRangeRegular.Text;
             searchBook.AddressCuttingRegular = AddressCuttingRegular.Text;
             searchBook.AddressRegular = AddressRegular.Text;
@@ -268,7 +268,7 @@ namespace HappyReading.UI
                 Tips tips = new Tips(Msg);
                 tips.Show();
                 //加载书源
-                ListSource.ItemsSource = DataFetch.GetBookSources();
+                ListSource.ItemsSource = DataFetch.GetBookSources(0);
             }
             else //这个是增加新源
             {
@@ -276,7 +276,7 @@ namespace HappyReading.UI
                 {
                     if (sourceName.Text.Trim().Length > 0 && sourceName.Text != "请输入新书源名~" && sourceUrl.Text.Trim().Length > 0 && sourceUrl.Text != "请输入新书源URL~")
                     {
-                        string Msg = DataFetch.SourceAdd(bookSource) ? "添加成功~" : "添加失败！";
+                        string Msg = DataFetch.SourceAdd(bookSource) ? "添加成功~" : "添加失败！书源名和书源链接无法重复~";
                         new Tips(Msg).Show();
                         
                     }
@@ -292,7 +292,7 @@ namespace HappyReading.UI
             }
 
             //加载书源
-            ListSource.ItemsSource = DataFetch.GetBookSources();
+            ListSource.ItemsSource = DataFetch.GetBookSources(0);
             TempData.UpdateBookSourceS();
             Empty();
             
@@ -344,7 +344,7 @@ namespace HappyReading.UI
                 {
                     DataFetch.DeleteBookSource((int)bookSource.Id);
                     //加载书源
-                    ListSource.ItemsSource = DataFetch.GetBookSources();
+                    ListSource.ItemsSource = DataFetch.GetBookSources(0);
                     TempData.UpdateBookSourceS();
                 }
             }
@@ -398,18 +398,12 @@ namespace HappyReading.UI
             MessageBox.Show("状态码如果为1代表书源站正常访问，如果为0代表不可访问","提示");
             Thread thread = new Thread(new ThreadStart(delegate
             {
-                //遍历源站
-                foreach (BookSource bookSource in TempData.GetBookSourceS())
-                {
-                    //1代表网站可以访问，0代表不可以访问
-                    int state = GetHtml.GetUnicom(bookSource.Url) ? 1 : 0;
-                    DataFetch.UpdateState((int)bookSource.Id, state);
-                }
-
                 this.Dispatcher.Invoke(new Action(() =>
                 {
+                    //更新书源状态
+                    DataFetch.UpdateSourceState();
                     //加载书源
-                    ListSource.ItemsSource = DataFetch.GetBookSources();
+                    ListSource.ItemsSource = DataFetch.GetBookSources(0);
                     TempData.UpdateBookSourceS();
                 }));
             }));
@@ -464,10 +458,10 @@ namespace HappyReading.UI
                     sr.Close();
                     if (Book_Source.Title.Length > 1 && Book_Source.Url.Length > 1)
                     {
-                        string Msg = DataFetch.SourceAdd(Book_Source) ? "添加成功~" : "添加失败！";
+                        string Msg = DataFetch.SourceAdd(Book_Source) ? "添加成功~" : "添加失败！书源名和书源链接无法重复~";
                         new Tips(Msg).Show();
                         //加载书源
-                        ListSource.ItemsSource = DataFetch.GetBookSources();
+                        ListSource.ItemsSource = DataFetch.GetBookSources(0);
                         TempData.UpdateBookSourceS();
                     }
                     else
@@ -478,6 +472,8 @@ namespace HappyReading.UI
                 catch (Exception ex)
                 {
                     new Tips("书源异常:"+ex.Message).Show();
+                    //Exception ex
+                    Tool.TextAdditional(ex.Message);
                 }
                 
                
@@ -518,6 +514,7 @@ namespace HappyReading.UI
             catch (Exception ex)
             {
                 new Tips(ex.Message).Show();
+                Tool.TextAdditional(ex.Message);
             }
         }
     }

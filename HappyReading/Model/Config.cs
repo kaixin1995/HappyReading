@@ -57,7 +57,7 @@ namespace HappyReading.Model
         /// <summary>
         /// 当前软件版本
         /// </summary>
-        public static string Edition = "4.2";
+        public static string Edition = "4.3";
 
 
         /// <summary>

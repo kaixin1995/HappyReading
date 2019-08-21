@@ -41,8 +41,12 @@ namespace HappyReading.UI
                         Join.Background = Brushes.DarkTurquoise;
                         Join.Content = "已加入";
                         Join.IsEnabled = false;
-                        buffer.Visibility = Visibility.Hidden;
                     }
+                }));
+
+                this.Dispatcher.Invoke(new Action(() =>
+                {
+                    buffer.Visibility = Visibility.Hidden;
                 }));
             }));
             thread.IsBackground = true;  //是否为后台线程

@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Text;
 using System.Threading;
 using System.Windows.Controls;
@@ -51,19 +52,49 @@ namespace HappyReading.BLL
             {
                 return ((int)timeSpan.TotalDays/365) + "年前";
             }
+           
             
 
             return (int)timeSpan.TotalDays + "天前";
         }
 
+        /// <summary>
+        /// Text文件追加
+        /// </summary>
+        /// <param name="text">追加内容</param>
+        /// <returns>返回追加结果</returns>
+        public static bool TextAdditional(string text)
+        {
+            FileStream fs = null;
+            string filePath = AppDomain.CurrentDomain.BaseDirectory+"MsgLog.txt";
+            // 将待写的入数据从字符串转换为字节数组  
+            Encoding encoder = Encoding.UTF8;
+            byte[] bytes = encoder.GetBytes(DateTime.Now.ToString("G")+":"+text + "\r\n");
+            try
+            {
+                fs = File.OpenWrite(filePath);
+                // 设定书写的开始位置为文件的末尾  
+                fs.Position = fs.Length;
+                // 将待写入内容追加到文件末尾  
+                fs.Write(bytes, 0, bytes.Length);
+                fs.Close();
+                fs.Dispose();
+                return true;
+            }
+            catch
+            {
+                return false;
+            }
+
+        }
 
         /// <summary>
-        /// 智能拼凑文章URL
+        /// 智能拼凑URL
         /// </summary>
         /// <param name="host">主页</param>
-        /// <param name="url">文章页</param>
+        /// <param name="url">链接</param>
         /// <param name="BookListUrl">目录页</param>
-        /// <returns>返回处理的文章链接</returns>
+        /// <returns>返回处理的链接</returns>
         public static string ObtainUrl(string host, string url, string BookListUrl = null)
         {
             if (url.Length > 0)
@@ -78,10 +109,24 @@ namespace HappyReading.BLL
                 }
                 else
                 {
+                    if (BookListUrl == null) return host + url;
+
                     return BookListUrl + url;
                 }
             }
             return url;
+        }
+
+
+        /// <summary>
+        /// 编码转换
+        /// </summary>
+        /// <param name="fromString">需要转的字符串</param>
+        /// <param name="toEncoding">将要转成的编码</param>
+        /// <returns>返回转码结果</returns>
+        public static string EncodingConvert(string fromString, Encoding toEncoding)
+        {
+            return System.Web.HttpUtility.UrlEncode(fromString, toEncoding);
         }
 
 
@@ -133,14 +178,13 @@ namespace HappyReading.BLL
                     for (int i = 0; i < gc.Count; i++)
                     {
                         temp = gc[i].Value;  //得到组对应数据
-
                     }
-
                 }
                 return temp;
             }
             catch
             {
+                TextAdditional("正则查找失败");
                 return string.Empty;
             }
 
@@ -177,35 +221,6 @@ namespace HappyReading.BLL
 
         }
 
-
-        /// <summary>
-        /// 函数运行超时则终止执行（超时则返回true，否则返回false）
-        /// </summary>
-        /// <typeparam name="T">参数类型</typeparam>
-        /// <param name="action">要被执行的函数</param>
-        /// <param name="p">函数需要的一个参数</param>
-        /// <param name="timeoutMilliseconds">超时时间(毫秒)</param>
-        /// <returns>超时则返回true，否则返回false</returns>
-        public static void CallWithTimeout<T>(Action<T> action, T p, int timeoutMilliseconds)
-        {
-            Thread threadToKill = null;
-            Action wrappedAction = () =>
-            {
-                threadToKill = Thread.CurrentThread;
-                action(p);
-            };
-
-            IAsyncResult result = wrappedAction.BeginInvoke(null, null);
-            if (result.AsyncWaitHandle.WaitOne(timeoutMilliseconds))
-            {
-                wrappedAction.EndInvoke(result);
-            }
-            else
-            {
-                threadToKill.Abort();
-                throw new TimeoutException();
-            }
-        }
 
 
         /// <summary>

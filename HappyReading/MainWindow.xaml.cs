@@ -4,6 +4,7 @@ using HappyReading.Model;
 using HappyReading.UI;
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Threading;
 using System.Windows;
 using System.Windows.Controls;
@@ -24,7 +25,7 @@ namespace HappyReading
             InitializeComponent();
 
             //190731增加，这里新增加一个判断，判断是否存在指定列，如果不存在将进行增加列操作
-            if(!DataFetch.ColumnExistence("BookSource", "Code")) SQLiteDBHelper.ExecuteDataTable("ALTER TABLE BookSource ADD COLUMN Code Text; ", null);
+            if (!DataFetch.ColumnExistence("BookSource", "Code")) SQLiteDBHelper.ExecuteDataTable("ALTER TABLE BookSource ADD COLUMN Code Text; ", null);
 
             string path = AppDomain.CurrentDomain.BaseDirectory;
             //this.Icon = BitmapFrame.Create(new Uri(path + "Resources/favicon.ico"));
@@ -32,7 +33,7 @@ namespace HappyReading
             //获取配置项
             config = ConfigReadWrite.GetConfig();
 
-            about.Text = "本软件只是娱乐之作，所有数据来源皆来自于网络，如果有侵犯到他人的权益，请于我进行联系，我会第一时间删除源站，谢谢合作！\n\n本软件默认有四个源，用户可以自定义增加更多的源站，如果你有更好的源站，可以推荐给我，我会第一时间集成进去。\n\n本软件初始发布于吾爱破解，如果你在使用的过程中有发现BUG或者其他不合理的地方，请进行留言。本软件只作用于学习研究，请在下载内24小时内删除本软件。";
+            about.Text = "本软件只是娱乐之作，所有数据来源皆来自于网络，如果有侵犯到他人的权益，请于我进行联系，我会第一时间删除源站，谢谢合作！\n\n本软件默认有五个源，用户可以自定义增加更多的源站，如果你有更好的源站，可以推荐给我，我会第一时间集成进去。\n\n本软件初始发布于吾爱破解，如果你在使用的过程中有发现BUG或者其他不合理的地方，请进行留言。本软件只作用于学习研究，请在下载内24小时内删除本软件。";
 
             //字体
             Typeface.ItemsSource = Tool.GetTypeface();
@@ -45,7 +46,10 @@ namespace HappyReading
             //绑定主题
             theme.ItemsSource = config.GetTheme;
             theme.Text = config.Theme;
-            
+
+            //更新书源状态
+            DataFetch.UpdateSourceState();
+
             //刷新数据
             RefreshData();
 
@@ -53,8 +57,14 @@ namespace HappyReading
             SourceStation.ItemsSource = lb;
             SourceStation.Text = config.SourceStation;
 
-            //禁用养肥区
-            fatten.IsEnabled = false;
+
+            //默认显示养肥区
+            FertilizingArea.Visibility = Visibility.Visible;
+            fatten.IsEnabled = true;
+            //绑定养肥区
+            fatten.ItemsSource = config.GetFattenNumber;
+            fatten.Text = config.FattenNumber.ToString();
+            GetFatten();
         }
         
 
@@ -156,16 +166,54 @@ namespace HappyReading
             SourceChange.Visibility = Visibility.Visible;
             buffer.Visibility = Visibility.Visible;
             int Newid = Convert.ToInt32(((MenuItem)sender).Tag);
-            Book book = DataFetch.GetBook(Newid);
+            Book Works = DataFetch.GetBook(Newid);
             SourceChange.ItemsSource = null;
 
             Thread thread = new Thread(new ThreadStart(delegate
             {
-                List<Book> books = DataFetch.SourceSearch(book);
+                string BookName = Works.Name;
+                List<BookSource> bookSources = TempData.GetBookSourceS();
+                //存储书的书架
+                List<Book> Books = new List<Book>();
+                foreach (BookSource bookSource in bookSources)
+                {
+                    List<Book> books = DataFetch.Search(bookSource, BookName);
+                    if (books != null)
+                    {
+                        foreach (Book book in books)
+                        {
+                            if (book.Name == BookName || book.Author == Works.Author && book.Name.Contains(BookName))
+                            {
+                                book.Id = Works.Id;
+                                this.Dispatcher.Invoke(new Action(() =>
+                                {
+                                    if (SourceChange.Visibility == Visibility.Collapsed)
+                                    {
+                                        //必须加这个，否则无法修改任何值
+                                        SourceChange.ItemsSource = null;
+                                        SourceChange.Items.Clear();
+                                        return;
+                                    }
+                                    else
+                                    {
+                                        foreach (var de in SourceChange.Items)
+                                        {
+                                            if (((Book)de).Source == book.Source)
+                                            {
+                                                continue; 
+                                            }
+                                        }
+                                        SourceChange.Items.Add(book);
+                                    }
+                                    
+                                }));
+                            }
+                        }
+                    }
 
+                }
                 this.Dispatcher.Invoke(new Action(() =>
                 {
-                    SourceChange.ItemsSource = books;
                     buffer.Visibility = Visibility.Hidden;
                 }));
             }));
@@ -209,29 +257,72 @@ namespace HappyReading
 
             //查看选择的哪个书源
             int id = BookSourceName.SelectedIndex;
-
             try
             {
-                Thread thread = new Thread(new ThreadStart(delegate
-                   {
-                       List<Book> books = DataFetch.Search(lb[id], Keyword);
-                       this.Dispatcher.Invoke(new Action(() =>
-                       {
-                           if (books != null)
-                           {
-                               SearchList.ItemsSource = books;
-                           }
-                           search.Content = "搜索";
-                           SearchBuffer.Visibility = Visibility.Hidden;
-                           search.IsEnabled = true;
-                       }));
-                   }));
-                thread.IsBackground = true;
-                thread.Start();
+                //全部搜索和其他的不同，故此重写
+                if (lb[id].Id == -5)
+                {
+                    Thread thread = new Thread(new ThreadStart(delegate
+                    {
+                        foreach (BookSource Source in TempData.GetBookSourceS())
+                        {
+                            try
+                            {
+                                List<Book> T_books = DataFetch.Search(Source, Keyword);
+                                if (T_books != null)
+                                {
+                                    Dispatcher.Invoke(new Action(() =>
+                                    {
+                                        foreach (Book book in T_books)
+                                        {
+                                            SearchList.Items.Add(book);
+                                        }
+
+                                    }));
+                                }
+                            }
+                            catch (Exception ex)
+                            {
+                                
+                                Tool.TextAdditional(ex.Message);
+                            }
+                        }
+                        this.Dispatcher.Invoke(new Action(() =>
+                        {
+                            search.Content = "搜索";
+                            SearchBuffer.Visibility = Visibility.Hidden;
+                            search.IsEnabled = true;
+                        }));
+                    }));
+                    thread.IsBackground = true;
+                    thread.Start();
+                }
+                else
+                {
+                    Thread thread = new Thread(new ThreadStart(delegate
+                    {
+                        List<Book> books = DataFetch.Search(lb[id], Keyword);
+                        this.Dispatcher.Invoke(new Action(() =>
+                        {
+                            if (books != null)
+                            {
+                                SearchList.ItemsSource = books;
+                            }
+                            search.Content = "搜索";
+                            SearchBuffer.Visibility = Visibility.Hidden;
+                            search.IsEnabled = true;
+                        }));
+                    }));
+                    thread.IsBackground = true;
+                    thread.Start();
+                }
+
+                
             }
             catch (Exception ex)
             {
                 new Tips(ex.Message).Show();
+                Tool.TextAdditional(ex.Message);
                 search.Content = "搜索";
                 SearchBuffer.Visibility = Visibility.Hidden;
                 search.IsEnabled = true;
@@ -252,7 +343,7 @@ namespace HappyReading
         /// </summary>
         private void Empty_Click(object sender, RoutedEventArgs e)
         {
-            SearchList.Items.Clear();
+            SearchList.ItemsSource = null;
             BookName.Text = string.Empty;
         }
 
@@ -392,6 +483,9 @@ namespace HappyReading
         /// <param name="e"></param>
         private void QuitSource_Click(object sender, RoutedEventArgs e)
         {
+            //清空已有的部分数据
+            SourceChange.ItemsSource = null;
+            SourceChange.Items.Clear();
             SourceChange.Visibility = Visibility.Collapsed;
             bookshelf.Visibility = Visibility.Visible;
             buffer.Visibility = Visibility.Hidden;
@@ -404,12 +498,24 @@ namespace HappyReading
         private void SureSource_Click(object sender, RoutedEventArgs e)
         {
             //MessageBox.Show(((MenuItem)sender).Tag.ToString());
+            //清空已有的部分数据
+            SourceChange.ItemsSource = null;
+            SourceChange.Items.Clear();
             Book book = SourceChange.SelectedItem as Book;
             if (book != null && book is Book)
             {
                 if (!DataFetch.UpdateBookSource(book))
                 {
                     new Tips("更换失败~").Show();
+                }
+                else
+                {
+                    //更换书籍后，重新刷新全部书籍信息
+                    //获取所有书籍
+                    this.DataContext = DataFetch.GetBooks();
+
+                    //启动时更新书籍
+                    Update();
                 }
                 SourceChange.Visibility = Visibility.Collapsed;
                 bookshelf.Visibility = Visibility.Visible;
@@ -457,6 +563,8 @@ namespace HappyReading
             List<Book> books = DataFetch.GetBooks(true);
             FattenArea.ItemsSource = null;
             FattenArea.ItemsSource = books;
+
+            UpdateFatten();
 
         }
 

@@ -3,6 +3,7 @@ using HappyReading.Model;
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Runtime.InteropServices;
 using System.Speech.Synthesis;
 using System.Threading;
 using System.Windows;
@@ -57,34 +58,41 @@ namespace HappyReading.UI
 
             Thread thread = new Thread(new ThreadStart(delegate
             {
-                this.book = book;
-                this.mainWindow = mainWindow;
-                this.config = config;
-                //获取目录
-                DataFetch.GetList(book);
-                bookSource = DataFetch.GetBookSource(book.Source);
+                try
+                {
+                    this.book = book;
+                    this.mainWindow = mainWindow;
+                    this.config = config;
+                    //获取目录
+                    DataFetch.GetList(book);
+                    bookSource = DataFetch.GetBookSource(book.Source);
 
-                //主要为遍历目录
-                int i = 0;
-                foreach (KeyValuePair<string, string> kvp in book.ListUrl)
-                {
-                    if (kvp.Key.Trim().Length > 2)
+                    //主要为遍历目录
+                    int i = 0;
+                    foreach (KeyValuePair<string, string> kvp in book.ListUrl)
                     {
-                        i++;
-                        NewId.Add(i, kvp.Key);
+                        if (kvp.Key.Trim().Length > 2)
+                        {
+                            i++;
+                            NewId.Add(i, kvp.Key);
+                        }
                     }
+                    Dispatcher.Invoke((Action)delegate
+                    {
+                        if (book.Read == 0)
+                        {
+                            Jump(1);
+                        }
+                        else
+                        {
+                            Jump((int)book.Read);
+                        }
+                    });
                 }
-                Dispatcher.Invoke((Action)delegate
+                catch (Exception ex)
                 {
-                    if (book.Read == 0)
-                    {
-                        Jump(1);
-                    }
-                    else
-                    {
-                        Jump((int)book.Read);
-                    }
-                });
+                    Tool.TextAdditional(ex.Message);
+                }
             }));
             thread.IsBackground = true;  //是否为后台线程
             thread.Start();
@@ -555,9 +563,10 @@ namespace HappyReading.UI
                 thread.IsBackground = true;  //是否为后台线程
                 thread.Start();
             }
-            catch 
+            catch(Exception ex)
             {
                 new Tips("打开错误，请检查书源是否存在问题？").Show();
+                Tool.TextAdditional(ex.Message);
                 buffer.Visibility = Visibility.Hidden;
             }
         }

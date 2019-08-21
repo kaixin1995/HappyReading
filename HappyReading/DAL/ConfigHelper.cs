@@ -1,4 +1,5 @@
-﻿using System;
+﻿using HappyReading.BLL;
+using System;
 using System.Collections.Generic;
 using System.Configuration;
 using System.Linq;
@@ -69,7 +70,10 @@ namespace HappyReading.DAL
                 conf.Save();
                 return true;
             }
-            catch { return false; }
+            catch(Exception ex)
+            {
+                Tool.TextAdditional(ex.Message);
+                return false; }
         }
 
         /// <summary>
@@ -94,35 +98,8 @@ namespace HappyReading.DAL
                 conf.Save();
                 return true;
             }
-            catch { return false; }
-        }
-
-        /// <summary>  
-        /// 获取本机MAC地址  
-        /// </summary>  
-        /// <returns>本机MAC地址</returns>  
-        public static string GetMacAddress()
-        {
-            try
-            {
-                string strMac = string.Empty;
-                ManagementClass mc = new ManagementClass("Win32_NetworkAdapterConfiguration");
-                ManagementObjectCollection moc = mc.GetInstances();
-                foreach (ManagementObject mo in moc)
-                {
-                    if ((bool)mo["IPEnabled"] == true)
-                    {
-                        strMac = mo["MacAddress"].ToString();
-                    }
-                }
-                moc = null;
-                mc = null;
-                return strMac;
-            }
-            catch
-            {
-                return "unknown";
-            }
+            catch(Exception ex)
+            { Tool.TextAdditional(ex.Message); return false; }
         }
     }
 }
