@@ -1,0 +1,4 @@
+如果是新用户，那么可以直接使用。
+如果是已经使用过得用户，请切记不要替换db文件夹和HappyReading.exe.config配置文件。
+db文件夹中是已经保存的书籍和书源信息
+HappyReading.exe.config配置文件则是软件的设置信息保存

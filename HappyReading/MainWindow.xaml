@@ -1,0 +1,201 @@
+﻿<Controls:MetroWindow x:Class="HappyReading.MainWindow"
+        xmlns:Controls="clr-namespace:MahApps.Metro.Controls;assembly=MahApps.Metro"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:local="clr-namespace:HappyReading"
+        mc:Ignorable="d"
+        Title="HappyReading" Height="650" Width="470" ResizeMode="NoResize"  WindowStartupLocation="CenterScreen"  Loaded="MetroWindow_Loaded">
+    <Window.Resources>
+        <DataTemplate x:Key="myTaskTemplate">
+            <Border Name="border" BorderBrush="DarkSlateBlue" BorderThickness="2"
+        CornerRadius="2" Padding="5" Margin="5">
+                <Grid MouseDown="NewBook_MouseDown" Name="NewBook" Tag="{Binding Path=Id}">
+                    <!--行-->
+                    <Grid.RowDefinitions>
+                        <RowDefinition/>
+                        <RowDefinition/>
+                        <RowDefinition/>
+                        <RowDefinition/>
+                        <RowDefinition/>
+                    </Grid.RowDefinitions>
+                    <!--列-->
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition />
+                        <ColumnDefinition />
+                        <ColumnDefinition />
+                    </Grid.ColumnDefinitions>
+                    <Image Grid.RowSpan="4" Grid.Column="0" Margin="-30,0,0,0" Height="150" Width="115" Source="{Binding Path=Image}" />
+                    <TextBlock Grid.Row="0" Grid.Column="1" Padding="-20,8,5,0" Text="书籍书名:"/>
+                    <TextBlock Grid.Row="0" Grid.Column="1" Margin="65,8,5,0" Text="{Binding Path=Name}"/>
+                    <TextBlock Grid.Row="1" Grid.Column="1" Padding="-20,8,5,5" Text="书籍作者:"/>
+                    <TextBlock Grid.Row="1" Grid.Column="1" Margin="65,8,0,0" Text="{Binding Path=Author}"/>
+                    <TextBlock Grid.Row="2" Grid.Column="1" Padding="-20,8,5,5" Text="最新章节:"/>
+                    <TextBlock Grid.Row="2" Grid.Column="1" Margin="65,8,0,0" Text="{Binding Path=Newest}"/>
+                    <TextBlock Grid.Row="3" Grid.Column="1" Margin="-20,8,5,5" Text="更新时间:"/>
+                    <TextBlock Grid.Row="3" Grid.Column="1" Margin="65,8,0,0" Text="{Binding Path=Update}"/>
+                    <Grid.ContextMenu>
+                        <!--菜单-->
+                        <ContextMenu  StaysOpen="true" Name="BookshelfMenu">
+                            <MenuItem Header="立即阅读" Click="Read_Click" Tag="{Binding Path=Id}" />
+                            <MenuItem Header="一键更新" Click="Updata_Click" />
+                            <MenuItem Header="更换书源" Click="Replace_Click" Tag="{Binding Path=Id}" />
+                            <MenuItem Header="查看书籍" Click="CheckBooks_Click" Tag="{Binding Path=Id}" />
+                            <MenuItem Header="删除书籍" Click="Delete_Click" Tag="{Binding Path=Id}" />
+                            <MenuItem Name="ItemFatten" Header="加入养肥区" Click="ItemFatten_Click" Tag="{Binding Path=Id}" />
+                        </ContextMenu>
+                    </Grid.ContextMenu>
+                </Grid>
+            </Border>
+        </DataTemplate>
+    </Window.Resources>
+    <Controls:MetroWindow.RightWindowCommands>
+        <Controls:WindowCommands>
+            <Button Content="Githup源码" Tag="githup" Click="Button_Click" />
+            <Button>
+                <StackPanel Orientation="Horizontal">
+                    <TextBlock Margin="4 0 0 0" VerticalAlignment="Center" Tag="52pj"  Text="开心阅读重置版" />
+                </StackPanel>
+            </Button>
+        </Controls:WindowCommands>
+    </Controls:MetroWindow.RightWindowCommands>
+
+    <Grid>
+        <TabControl Margin="0,0,0,0" FontSize="16">
+            <TabItem Header="我的书架">
+                <Grid Background="Transparent">
+                    <Border BorderBrush="#aaaaaa" BorderThickness="0,2,0,0"/>
+                    <!--换源界面-->
+                    <ListView  Name="SourceChange" FontSize="14" Visibility="Collapsed">
+                        <ListView.View>
+                            <GridView>
+                                <GridViewColumn Header="源站" Width="80" DisplayMemberBinding="{Binding Source}"/>
+                                <GridViewColumn Header="作者" Width="90" DisplayMemberBinding="{Binding Author}"/>
+                                <GridViewColumn Header="最新章节" Width="210" DisplayMemberBinding="{Binding Newest}"/>
+                                <GridViewColumn Header="更新日期" Width="70" DisplayMemberBinding="{Binding Update}"/>
+                            </GridView>
+                        </ListView.View>
+                        <ListView.ContextMenu>
+                            <ContextMenu StaysOpen="true">
+                                <MenuItem Header="选择换源" Name="SureSource" Click="SureSource_Click" Tag="{Binding Id}" />
+                                <MenuItem Header="退出换源" Name="quitSource" Click="QuitSource_Click" />
+                            </ContextMenu>
+                        </ListView.ContextMenu>
+                    </ListView>
+                    <!-- 我的书架显示 -->
+                    <DockPanel Name="bookshelf" >
+                        <!-- Data template is specified by the ItemTemplate attribute -->
+                        <ListBox  ItemsSource="{Binding}"  ItemTemplate="{StaticResource myTaskTemplate}" HorizontalContentAlignment="Stretch" IsSynchronizedWithCurrentItem="True" Margin="5,8,5,5" />
+                    </DockPanel>
+                    <Controls:ProgressRing Foreground="{DynamicResource AccentColorBrush}" HorizontalAlignment="Left" Margin="172,208,0,0" VerticalAlignment="Top" Width="106" Name="buffer" Height="111" Visibility="Hidden" />
+                    <!--目录-->
+
+
+                </Grid>
+            </TabItem>
+
+            <TabItem Header="养肥区" Name="FertilizingArea" Visibility="Collapsed">
+                <Grid>
+                    <Border BorderBrush="#aaaaaa" BorderThickness="0,2,0,0" />
+                    <ListView Margin="10" Name="FattenArea"  FontSize="14" >
+                        <ListView.View>
+                            <GridView>
+                                <GridViewColumn Header="书源" Width="67" DisplayMemberBinding="{Binding Source}" />
+                                <GridViewColumn Header="书名" Width="85" DisplayMemberBinding="{Binding Name}"/>
+                                <GridViewColumn Header="更新日期" Width="65" DisplayMemberBinding="{Binding Update}" />
+                                <GridViewColumn  Header="最新章节" Width="147" DisplayMemberBinding="{Binding Newest}" />
+                                <GridViewColumn Header="养肥章节" Width="67" DisplayMemberBinding="{Binding FattenNumber}" />
+                            </GridView>
+                        </ListView.View>
+                        <ListView.ContextMenu>
+                            <ContextMenu StaysOpen="true">
+                                <MenuItem Header="移出养肥区" Name="MoveOut" Click="MoveOut_Click" />
+                                <MenuItem Header="一键更新" Click="Updata_Click" />
+                            </ContextMenu>
+                        </ListView.ContextMenu>
+                    </ListView>
+                </Grid>
+            </TabItem>
+
+            <TabItem Header="搜索书籍">
+                <Grid>
+                    <Border BorderBrush="#aaaaaa" BorderThickness="0,2,0,0" />
+
+
+                    <Grid Background="Transparent" Name="SearchPanel">
+                        <ListView Margin="10,75,19,10" Name="SearchList" FontSize="14" MouseDoubleClick="SearchList_MouseDoubleClick">
+                            <ListView.View>
+                                <GridView>
+                                    <GridViewColumn Header="书源" Width="67" DisplayMemberBinding="{Binding Source}" />
+                                    <GridViewColumn Header="书名" Width="85" DisplayMemberBinding="{Binding Name}"/>
+                                    <GridViewColumn Header="作者" Width="67" DisplayMemberBinding="{Binding Author}" />
+                                    <GridViewColumn Header="更新日期" Width="65" DisplayMemberBinding="{Binding Update}" />
+                                    <GridViewColumn  Header="最新章节" Width="147" DisplayMemberBinding="{Binding Newest}" x:Name="LatestChapters" />
+                                </GridView>
+                            </ListView.View>
+                            <ListView.ContextMenu>
+                                <ContextMenu Name="cm" StaysOpen="true">
+                                    <MenuItem Header="立即阅读"  Name="Read" Click="Read_Click_1"/>
+                                    <MenuItem Header="加入书架" Name="JoinBookshelves" Click="JoinBookshelves_Click"/>
+                                    <MenuItem Header="查看详情" Name="ViewDetails" Click="ViewDetails_Click"  />
+                                    <MenuItem Header="清空搜索" Name="empty" Click="Empty_Click" />
+                                </ContextMenu>
+                            </ListView.ContextMenu>
+                        </ListView>
+                        <TextBox Text="神墓" Name="BookName" Margin="150,21,151,521" FontSize="18" />
+                        <ComboBox DisplayMemberPath="Title" Height="35" HorizontalAlignment="Left" FontSize="18"  Margin="23,21,0,0" Name="BookSourceName" SelectedValuePath="Id" VerticalAlignment="Top" Width="111">
+                            <ComboBox.ItemsPanel>
+                                <ItemsPanelTemplate>
+                                    <VirtualizingStackPanel />
+                                </ItemsPanelTemplate>
+                            </ComboBox.ItemsPanel>
+                            <ComboBox.ItemsSource>
+                                <CompositeCollection>
+                                    <ComboBoxItem>全部</ComboBoxItem>
+                                    <CollectionContainer Collection="{Binding lb}" />
+                                </CompositeCollection>
+                            </ComboBox.ItemsSource>
+                        </ComboBox>
+                        <Button Margin="338,21,29,521" Content="搜索" Name="search" Click="Search_Click" RenderTransformOrigin="0.62,0.457"  />
+                        <Controls:ProgressRing Foreground="{DynamicResource AccentColorBrush}"  Name="SearchBuffer"  Visibility="Hidden" />
+                    </Grid>
+
+                </Grid>
+
+            </TabItem>
+            <TabItem Header="设置面板"  >
+                <Grid Background="Transparent">
+                    <Border BorderBrush="#aaaaaa" BorderThickness="0,2,0,0" />
+                    <GroupBox Header="显示设置" Margin="10,10,10,428">
+                        <Grid>
+                            <Label Content="字体：" Margin="10,10,349,57" FontSize="18" />
+                            <ComboBox  SelectionChanged="SaveConfiguration"  Name="Typeface" FontSize="18" Margin="78,10,238,63" />
+                            <Label Content="大小：" Margin="221,10,138,57" FontSize="18" />
+                            <ComboBox FontSize="18" SelectionChanged="SaveConfiguration"  Name="TypefaceSize" Margin="290,10,26,63" />
+                            <Label Content="主题：" Margin="10,58,349,9" FontSize="18" />
+                            <ComboBox FontSize="18" SelectionChanged="SaveConfiguration" Name="theme" Margin="79,60,237,13" />
+                            <Label Content="源站：" Margin="221,58,138,9" FontSize="18" />
+                            <ComboBox Name="SourceStation" SelectionChanged="SaveConfiguration" FontSize="18" Margin="290,60,26,13" DisplayMemberPath="Title"  SelectedValuePath="Id" RenderTransformOrigin="0.473,0.156" />
+                        </Grid>
+
+                    </GroupBox>
+
+                    <GroupBox Header="关于及说明" Margin="10,247,10,72">
+                        <Grid>
+                            <TextBlock TextWrapping="Wrap" Name="about" />
+                        </Grid>
+
+                    </GroupBox>
+                    <Label Content="按键(Shift+S)关闭本软件        按键(Alt+D)显示或隐藏阅读" Margin="15,166,10,375" FontSize="16" />
+                    <Button Content="书源管理" Name="SourceManagement" Click="SourceManagement_Click" Margin="366,522,14,21" RenderTransformOrigin="1.353,0.467" />
+                    <Label Content="养肥数:" IsEnabled="False"  Margin="195,522,192,21" FontSize="18" />
+                    <ComboBox Name="fatten" FontSize="18" SelectionChanged="SaveConfiguration" Margin="271,522,114,21"/>
+                    <Controls:ToggleSwitch OnLabel="显示养肥区" FontSize="18" Click="BoolFertilizingArea_Click"  Name="BoolFertilizingArea" OffLabel="隐藏养肥区" Margin="21,520,268,14" IsChecked="True" />
+                    <Label Content="按键(Alt+Q)听书开始/停止     按键(Alt+W)听书暂停/播放" Margin="15,202,10,339" FontSize="16" />
+                </Grid>
+            </TabItem>
+        </TabControl>
+
+    </Grid>
+</Controls:MetroWindow>
